@@ -93,6 +93,7 @@
             <Button mnemonicParsing="false" onAction="#onActionBottonMostrar" text="Mostrar" />
             <Button mnemonicParsing="false" onAction="#iniciarSesionUI" text="Iniciar sesion" />
             <Button mnemonicParsing="false" onAction="#crearSesion" text="Crear sesion" />
+            <Button mnemonicParsing="false" text="Ajustes" />
         </items>
       </ToolBar>
    </children>
