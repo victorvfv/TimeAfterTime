@@ -176,21 +176,21 @@ public class Periodo {
         this.altura = altura;
     }
 
-    public void addAltura(double añadido){
+    public void addAltura(double añadido,double altoPeriodo){
         altura =añadido;
         if(!(periodosDependientes.isEmpty())){
             for(Periodo periodo: periodosDependientes){
-                periodo.addAltura(añadido+58);
+                periodo.addAltura(añadido,altoPeriodo);
             }
         }
     }
 
-    public void addAlturaColision(double añadido){
+    public void addAlturaColision(double añadido,double altoPeriodo){
         double alt=getAltura();
         altura =añadido;
         if(!(periodosDependientes.isEmpty())){
             for(Periodo periodo: periodosDependientes){
-                periodo.addAltura((periodo.getAltura()+(añadido-alt)));
+                periodo.addAltura((periodo.getAltura()+(añadido-alt)),altoPeriodo);
             }
         }
         if(!hitosDependientes.isEmpty()){

@@ -52,14 +52,24 @@ import java.util.*;
 
 public class MainViewController {
 
-    private ArrayList<Periodo> periodos;
-    private ArrayList<Hito> hitos;
-    private Proyecto proyectoActual;
+
+
+    //Manejo UI
     private HashMap<String,Node> vistas;
     private HashMap<String,PeriodoController> controladoresPer;
     private HashMap<String,HitoController> controladoresHit;
-    private double duracionMin=1,fechaMin=1,fechaMax;
-    private int i=1;
+
+    //Constantes y variables de refencia
+    private double duracionAñosMin=1,fechaMin=1,fechaMax;
+    private int indiceColores =1;
+    private static double altoPeriodo=58,sepracionperiodo=50;
+
+    //Datos bd
+    private Proyecto proyectoActual;
+    private ArrayList<Periodo> periodos;
+    private ArrayList<Hito> hitos;
+
+    //manejo bd
     private String idToken,refreshToken,uID;
     private LocalTime timer;
     final private String APIKEY="AIzaSyDkC0ZFDN4dNcQCyaLdpRWZpUQ_p_r_O3U";
@@ -155,12 +165,13 @@ public class MainViewController {
 
         periodoController.setMainViewController(this);
         periodoController.setPeriodos(periodos);
-        periodoController.newColor(tablaColores.get(i));
+        periodoController.newColor(tablaColores.get(indiceColores));
         periodoController.setFechasIni();
         periodoUI.requestFocus();
 
-        i=i+1;
-        if(i>10){i=1;}
+        indiceColores = indiceColores +1;
+        if(indiceColores >10){
+            indiceColores =1;}
     }
 
     /**
@@ -315,7 +326,8 @@ public class MainViewController {
      * @param periodosCalcular Lista de periodos padre
      */
     public void calcularAlturasPrimarios(ArrayList<Periodo> periodosCalcular){
-        double alturaMax=0;
+
+        //bucle for para dar una altura inicial X y maxima X esta ultima en funcion de los periodos hijos
         for(Periodo periodo:periodosCalcular){
             periodo.setAltura(58);
             periodo.setAlturaMax();
@@ -326,12 +338,16 @@ public class MainViewController {
             }
 
         }
+        //bucle for para dar la altura de los Hitos hijos en funcion de la altura maxima del periodo padre
         for(Periodo periodo:periodosCalcular){
             calcularAlturasHitosDep(periodo);
         }
+
+        //bucle de cálculo de colisiones entre periodos desde el más antiguo al más reciente
         for(Periodo periodo: periodosCalcular){
             ArrayList<Periodo> periodosCoincidentes= new ArrayList<>();
 
+            //bucle que comprueba si los periodos comparten fechas
             for(Periodo per:periodosCalcular){
                 double f1p=periodo.getFecha1();
                 double f2p=periodo.getFecha2();
@@ -347,11 +363,12 @@ public class MainViewController {
                     }
                 }
             }
-
+            //bucle para subir una altura a los periodos coincidentes si aparte de compartir fechas sus alturas coinciden,
+            // la altura a subir ha de ser la altura del periodo más una separación x(el estandar es 58 +20)
             for(Periodo altura:periodosCoincidentes){
                 //subimos a los periodos coincidentes
                 if((periodo.getAltura()<=altura.getAlturaMax())){
-                    altura.addAlturaColision(periodo.getAlturaMax()+78);
+                    altura.addAlturaColision(periodo.getAlturaMax()+(altoPeriodo+sepracionperiodo),altoPeriodo);
                     altura.setAlturaMax();
                 }
             }
@@ -361,6 +378,7 @@ public class MainViewController {
         periodosCalcularInver.sort((linea1,linea2)->{
             return linea2.getFecha2()-linea1.getFecha2();
         });
+        //bucle de cálculo de colisiones entre periodos esta vez desde el más actual al más antiguo
         for(Periodo periodo: periodosCalcularInver){
             ArrayList<Periodo> periodosCoincidentes= new ArrayList<>();
 
@@ -383,7 +401,7 @@ public class MainViewController {
             for(Periodo altura:periodosCoincidentes){
                 //subimos a los periodos coincidentes
                 if((altura.getAltura()<=periodo.getAlturaMax())){
-                    altura.addAlturaColision(periodo.getAlturaMax()+78);
+                    altura.addAlturaColision(periodo.getAlturaMax()+(altoPeriodo+sepracionperiodo),altoPeriodo);
                     altura.setAlturaMax();
                 }
             }
@@ -425,7 +443,7 @@ public class MainViewController {
 
             for(Periodo altura:periodosCoincidentes){
                 if((altura.getAltura()==periodo.getAltura())|((altura.getAltura()<=periodo.getAltura())&&(periodo.getAltura()<=altura.getAlturaMax()))){
-                    periodo.addAltura(altura.getAlturaMax()+58);
+                    periodo.addAltura(altura.getAlturaMax()+58,altoPeriodo);
                     periodo.setAlturaMax();
                     hueco=false;
                 }
@@ -437,14 +455,12 @@ public class MainViewController {
 
             if(colisiona&&(!periodo.getPeriodosDependientes().isEmpty()&&hueco)){
                 for (Periodo per:periodosCoincidentes){
-                    per.addAltura(periodo.getAlturaMax()+58);
+                    per.addAltura(periodo.getAlturaMax()+58,altoPeriodo);
                     per.setAlturaMax();
                 }
             }
             periodo.setAlturaMax();
         }
-
-
     }
 
     /**
@@ -453,7 +469,7 @@ public class MainViewController {
      * @return Ancho en píxeles
      */
     private double getTamaño(double Duracion){
-        return 200*(Duracion /duracionMin);
+        return 200*(Duracion /duracionAñosMin);
     }
 
     /**
@@ -463,7 +479,7 @@ public class MainViewController {
      */
     private double getPosicion(int Fecha1){
 
-        return Math.abs((((Fecha1)/duracionMin)*200+20)-(((fechaMin)/duracionMin)*200)) ;
+        return Math.abs((((Fecha1)/duracionAñosMin)*200+20)-(((fechaMin)/duracionAñosMin)*200)) ;
     }
 
     /**
@@ -829,11 +845,11 @@ public class MainViewController {
      */
     public void setDurFchMinFchMax(double duracion,int Fch1,int Fch2){
         if(Fch1!=Fch2){
-        duracionMin=duracion;}
+        duracionAñosMin=duracion;}
         fechaMin= Fch1;
         fechaMax=Fch2;
         for(Periodo per:periodos){
-            duracionMin=Math.min(duracionMin,per.getDuracion());
+            duracionAñosMin=Math.min(duracionAñosMin,per.getDuracion());
             fechaMin=Math.min(fechaMin,per.getFecha1());
             fechaMax=Math.max(fechaMax,per.getFecha2());
         }
